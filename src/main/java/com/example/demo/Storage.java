@@ -79,8 +79,9 @@ public class Storage implements StorageManagement {
 		}
 		return false;
 	}	
-	public Produto getProductByCode(int code) {
-		return this.getStorageProductByCode(code).getProd();
+	public Produto getProductByCode(int code) throws ProductNotFoundException {
+		Produto prod =  this.getStorageProductByCode(code).getProd();
+		return prod;
 	}
 	@Override
 	public String toString() {
@@ -94,8 +95,13 @@ public class Storage implements StorageManagement {
 		return str;
 	}
 	
-	private StorageProduct getStorageProductByCode(int cod) {
-		return this.stock.findById(cod);
+	private StorageProduct getStorageProductByCode(int cod) throws ProductNotFoundException {
+		if(this.stock.exists(cod)) {
+			return this.stock.findById(cod);			
+		}
+		else {
+			throw new ProductNotFoundException();
+		}
 	}	
 	private void updateProductOnStorage(StorageProduct prod) {
 		this.stock.delete(prod);
@@ -119,7 +125,7 @@ public class Storage implements StorageManagement {
 		this.updateProductOnStorage(product);
 	}
 	@Override
-	public void setPrice(Double price, int id) {
+	public void setPrice(Double price, int id) throws ProductNotFoundException {
 		StorageProduct prod = this.getStorageProductByCode(id);
 		prod.UpdatePrice(price);
 		this.stock.save(prod);

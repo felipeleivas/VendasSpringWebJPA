@@ -12,7 +12,7 @@ public interface StorageManagement {
 	public void soldAListOfProduct(ArrayList<ProductSale> sales) throws NotEnoughtInStockException, ProductNotFoundException;
 	public Boolean enoughInStock(ProductSale sale) throws ProductNotFoundException;
 	public Boolean enoughInStock(Sale sale) throws ProductNotFoundException;
-	public Produto getProductByCode(int code);
-	void setPrice(Double price, int id);
+	public Produto getProductByCode(int code) throws ProductNotFoundException;
+	void setPrice(Double price, int id) throws ProductNotFoundException;
 	public String toString() ;
 }

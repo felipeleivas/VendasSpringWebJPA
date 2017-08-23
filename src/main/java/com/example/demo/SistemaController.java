@@ -32,64 +32,57 @@ public class SistemaController {
 	public	String showStorage() {
 		return this.systemMng.printStock();
 	}
-	
+	//Update a price of a product
 	@PatchMapping("update-price/{id}")
 	public ResponseEntity<Produto>  updatePrice(@PathVariable("id") int id, Double newPrice){
-		this.systemMng.updatePrice(id, newPrice);
+		try {
+			this.systemMng.updatePrice(id, newPrice);
+		} catch (ProductNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
-	//localhost:8080/add-product
-	@RequestMapping("/add-product")
-	public ResponseEntity<Produto> addProduct(int cod, String name, Double price, int amount){
-		this.systemMng.addProduct(new Produto(name, cod, price),amount);
-		return new ResponseEntity<>(HttpStatus.CREATED);
-	}
-	
-	@RequestMapping("/sell-product2")
-	public SalesReceipt sellProduct2(int cod, int amount) {		
-		Sale sale = new Sale(cod,amount);
-		ArrayList<Sale> sales = new ArrayList<>();
-		sales.add(sale);		
-				
+	//add product on the stock
+	@PutMapping("/add-product")
+	public ResponseEntity<Integer> addProduct(int cod, String name, Double price, int amount){
+		Integer prodCode = null;
 		try {
-			SalesReceipt rec = systemMng.generateSalesReceipt(sales);
-			return rec;
-		} catch (NotEnoughtInStockException | ProductNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			prodCode = this.systemMng.addProduct(new Produto(name, cod, price),amount);
+		} catch (ProductNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
+		return new ResponseEntity<>(prodCode,HttpStatus.CREATED);
 	}
-	
-	@RequestMapping("/sell-product")
-	public String sellProduct(int cod, int amount) {		
-		Sale sale = new Sale(cod,amount);
-		ArrayList<Sale> sales = new ArrayList<>();
-		sales.add(sale);		
-				
-		try {
-			SalesReceipt rec = systemMng.generateSalesReceipt(sales);
-			return rec.toString();
-		} catch (NotEnoughtInStockException | ProductNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "ERRO";
-		}
-	}
-	
+	//adds a product on a sale
 	@PutMapping("/addProduct/{saleID}")
-	public ResponseEntity<Produto>  addProductSale(@PathVariable("saleID") Long id, int prodCod, int amount){
+	public ResponseEntity<Void>  addProductSale(@PathVariable("saleID") Long id, int prodCod, int amount){
 		try {
 			this.systemMng.addProductSaleOnASale(id, new Sale(prodCod, amount));
-			return new ResponseEntity<>(HttpStatus.OK);
 		} 
 		catch (ProductNotFoundException  | SaleNotFoundException e2) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}			
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
-	
+	//Create a empty sale;
+	@PutMapping("/createSale")
+	public ResponseEntity<Long> createSale(){
+		Long id=  this.systemMng.createSale();
+		return new ResponseEntity<>(id,HttpStatus.CREATED);
+	}
+	//Show all sales
 	@GetMapping("/showsales")
 	public Iterable<FinalSale> showSales(){
 		return this.systemMng.getSales();
+	}
+	
+	@GetMapping("/getsale/{id}")
+	public ResponseEntity<FinalSale> getSale(@PathVariable("id") Long id) {
+		try {
+			FinalSale sale = this.systemMng.getFinalSale(id);
+			return new ResponseEntity<FinalSale>(sale,HttpStatus.OK);
+		} catch (SaleNotFoundException e) {
+			return new ResponseEntity<FinalSale>(HttpStatus.NOT_FOUND);
+		}
 	}
 }

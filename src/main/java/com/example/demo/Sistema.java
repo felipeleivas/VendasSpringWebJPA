@@ -34,11 +34,12 @@ public class Sistema implements SystemInterface{
 	/**
 	 * Adds the newProduct to the Sistema list of products
 	 * @param newProduct
+	 * @throws ProductNotFoundException 
 	 */
-	public void addProduct (Produto newProduct, int amount) {
+	public Integer addProduct (Produto newProduct, int amount) throws ProductNotFoundException {
 		this.stock.addProductInStock(newProduct, amount);
+		return this.stock.getProductByCode(newProduct.getCod()).getCod();
 	}
-	
 	/**
 	 * Generates the SalesReceipt of a incoming List of Sale
 	 * @param sales An ArrayList of Sale, that contains all sales
@@ -50,7 +51,6 @@ public class Sistema implements SystemInterface{
 		SalesReceipt salesReceipt = this.generateSalesReceipt(productSales);
 		return salesReceipt;
 	}
-	
 	/**
 	 * @param productSales
 	 * @return
@@ -61,7 +61,6 @@ public class Sistema implements SystemInterface{
 		SalesReceipt salesReceipt = new SalesReceipt(productSales);
 		return salesReceipt;
 	}
-	
 	public FinalSale generateSale(ArrayList<Sale> sales) throws NotEnoughtInStockException, ProductNotFoundException {
 		ArrayList<ProductSale> productSales = new ArrayList<ProductSale>();
 		// Generates the sale of each Product and adds into an array
@@ -89,31 +88,15 @@ public class Sistema implements SystemInterface{
 	 * @return the product with that code
 	 * @throws ProductNotFoundException 
 	 */
-	
 	private Produto getProductByCode(int code) throws ProductNotFoundException{
 		return this.stock.getProductByCode(code);
 
-	}
-	
+	}	
 	public String printStock() {
 		return this.stock.toString();
 	}
-	
-	private boolean enoughtInStock(Sale sale) throws ProductNotFoundException {
-		return this.stock.enoughInStock(sale);
-	}
-	
-	private void updateStockAfterSale(ArrayList<ProductSale> sales) throws NotEnoughtInStockException, ProductNotFoundException {
-		this.stock.soldAListOfProduct(sales);
-	}
-	private void updateSale(FinalSale sale) {
-		this.sales.save(sale);
-	}
-	private FinalSale findSaleById(Long id) {
-		return this.sales.findBySaleId(id);
-	}
 	@Override
-	public void updatePrice(int cod, Double newPrice) {
+	public void updatePrice(int cod, Double newPrice) throws ProductNotFoundException {
 		this.stock.setPrice(newPrice, cod);
 		
 	}
@@ -134,5 +117,31 @@ public class Sistema implements SystemInterface{
 		
 		return this.sales.findAll();
 	}
+	@Override
+	public Long createSale() {
+		FinalSale newSale = new FinalSale();
+		return this.sales.save(newSale).getSaleId();
+	}
+	@Override
+	public FinalSale getFinalSale(Long id) throws SaleNotFoundException {
+		return this.findSaleById(id);
+	}
 	
+	private boolean enoughtInStock(Sale sale) throws ProductNotFoundException {
+		return this.stock.enoughInStock(sale);
+	}
+	private void updateStockAfterSale(ArrayList<ProductSale> sales) throws NotEnoughtInStockException, ProductNotFoundException {
+		this.stock.soldAListOfProduct(sales);
+	}
+	private void updateSale(FinalSale sale) {
+		this.sales.save(sale);
+	}
+	private FinalSale findSaleById(Long id) throws SaleNotFoundException {
+		if(sales.exists(id)) {
+			return this.sales.findBySaleId(id);			
+		}
+		else {
+			throw new SaleNotFoundException();
+		}
+	}
 }
